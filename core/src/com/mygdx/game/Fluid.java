@@ -1,10 +1,55 @@
 package com.mygdx.game;
 
+import javafx.util.Pair;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+enum ClickMode {
+    NONE,
+    MAKE_PAINT_SOURCE,
+    MAKE_FLOW,
+}
+
+//object class used to represent flowpoints in the simulation
+class Flow {
+
+    private Pair<Integer, Integer> location;
+    private Pair<Float, Float> velocity;
+
+    public Flow(Pair<Integer, Integer> location, Pair<Float, Float> velocity) {
+        this.location = location;
+        this.velocity = velocity;
+    }
+
+    public Pair<Integer, Integer> getLocation() {
+        return location;
+    }
+
+    public void setLocation(Pair<Integer, Integer> location) {
+        this.location = location;
+    }
+
+    public Pair<Float, Float> getVelocity() {
+        return velocity;
+    }
+
+    public void setVelocity(Pair<Float, Float> velocity) {
+        this.velocity = velocity;
+    }
+}
+
 public class Fluid {
+
+    ClickMode click_mode = ClickMode.NONE;
+
+    //used for storing a click which is needed when creating a flow
+    Pair<Integer, Integer> stored_click = null;
+
+    List<Pair<Integer, Integer>> paint_sources = new ArrayList<>();
+
+    List<Flow> flows = new ArrayList<>();
 
     int size;
     float time_change;
@@ -46,6 +91,8 @@ public class Fluid {
     }
 
     public void advance() {
+        applySources();
+
         diffuse(1, old_vel_x, vel_x, viscosity, time_change, 4);
         diffuse(2, old_vel_y, vel_y, viscosity, time_change, 4);
 
@@ -57,7 +104,22 @@ public class Fluid {
         project(vel_x, vel_y, old_vel_x, old_vel_y, 4);
 
         diffuse(0, s, density, diffusion, time_change, 4);
-        advect(0, density, s, old_vel_x, old_vel_y, time_change);
+        advect(0, density, s, vel_x, vel_y, time_change);
+    }
+
+    /**
+     * adds flow sources and paint sources to the simulation
+      */
+    public void applySources(){
+        for(Flow flow:flows){
+            vel_x.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),(float)flow.getVelocity().getKey());
+            vel_y.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),(float)flow.getVelocity().getValue());
+        }
+
+        for(Pair<Integer,Integer> source:paint_sources){
+            addDensity(source.getKey(),source.getValue(),1);
+        }
+
     }
 
     public void set_boundary(int b, List<List<Float>> array) {
@@ -127,7 +189,7 @@ public class Fluid {
         float s0, s1, t0, t1;
         float tmp1, tmp2, x, y;
 
-        float Nfloat = size-2;
+        float Nfloat = size - 2;
         float ifloat, jfloat;
         int i, j;
 
@@ -156,14 +218,9 @@ public class Fluid {
                 int i1i = Math.round(i1);
                 int j0i = Math.round(j0);
                 int j1i = Math.round(j1);
-//                System.out.println(i0i);
-//                System.out.println(i1i);
-//                System.out.println(j0i);
-//                System.out.println(j1i);
-                if(j1i==513){
+                if (j1i == 513) {
                     System.out.println("aaa");
                 }
-
 
 
                 d.get(i).set(j,
@@ -172,5 +229,36 @@ public class Fluid {
             }
         }
         this.set_boundary(b, d);
+    }
+
+    public void click(Integer xpos, Integer ypos) {
+        switch (this.click_mode) {
+            case MAKE_PAINT_SOURCE:
+                Pair<Integer, Integer> source = new Pair<>(xpos, ypos);
+                this.paint_sources.add(source);
+                break;
+            case MAKE_FLOW:
+                if(this.stored_click==null){
+                    this.stored_click= new Pair<>(xpos, ypos);
+                }else{
+                    //sometimes libgdx registers multiple clicks, this is caught here
+                    if(xpos!=this.stored_click.getKey() &&ypos!=this.stored_click.getValue()) {
+                        float xvel = -(float)( this.stored_click.getKey() - xpos) / (size/10);
+                        float yvel = -(float)(this.stored_click.getValue() - ypos) / (size/10);
+                        System.out.println("making flow with yvel:" + yvel + " and xvel:" + xvel);
+                        Pair<Float, Float> vel = new Pair<>(xvel, yvel);
+                        Flow flow = new Flow(this.stored_click, vel);
+                        this.flows.add(flow);
+                        this.stored_click = null;
+                    }
+                }
+                break;
+        }
+
+    }
+
+    public void setClickMode(ClickMode mode) {
+        this.click_mode = mode;
+        this.stored_click=null;
     }
 }
