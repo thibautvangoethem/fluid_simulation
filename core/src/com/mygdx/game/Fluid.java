@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+//Enum used to represent the current click mode the simulation is in
 enum ClickMode {
     NONE,
     MAKE_PAINT_SOURCE,
@@ -42,29 +43,37 @@ class Flow {
 
 public class Fluid {
 
-    ClickMode click_mode = ClickMode.NONE;
+    private ClickMode click_mode = ClickMode.NONE;
 
     //used for storing a click which is needed when creating a flow
-    Pair<Integer, Integer> stored_click = null;
+    private Pair<Integer, Integer> stored_click = null;
 
-    List<Pair<Integer, Integer>> paint_sources = new ArrayList<>();
+    private List<Pair<Integer, Integer>> paint_sources = new ArrayList<>();
 
-    List<Flow> flows = new ArrayList<>();
+    private List<Flow> flows = new ArrayList<>();
 
-    int size;
-    float time_change;
-    float diffusion;
-    float viscosity;
+    private int size;
+    private float time_change;
+    private float diffusion;
+    private float viscosity;
 
-    List<List<Float>> s = new ArrayList<>();
-    List<List<Float>> density = new ArrayList<>();
+    private List<List<Float>> s = new ArrayList<>();
+    private List<List<Float>> density = new ArrayList<>();
 
-    List<List<Float>> vel_x = new ArrayList<>();
-    List<List<Float>> vel_y = new ArrayList<>();
+    private List<List<Float>> vel_x = new ArrayList<>();
+    private List<List<Float>> vel_y = new ArrayList<>();
 
-    List<List<Float>> old_vel_x = new ArrayList<>();
-    List<List<Float>> old_vel_y = new ArrayList<>();
+    private List<List<Float>> old_vel_x = new ArrayList<>();
+    private List<List<Float>> old_vel_y = new ArrayList<>();
 
+    /**
+     * creation of the simulation and its arraylists
+     *
+     * @param size      the dimensions of the arraylists
+     * @param diffusion the diffusuion appliead per step
+     * @param viscosity the viscosityof the fluid
+     * @param dt        the amount of time pased per step
+     */
     public Fluid(int size, float diffusion, float viscosity, float dt) {
         this.size = size;
         this.diffusion = diffusion;
@@ -81,55 +90,76 @@ public class Fluid {
         }
     }
 
+    /**
+     * adds density to a certain point
+     * @param x the x loc
+     * @param y the y loc
+     * @param amount the amount added
+     */
     public void addDensity(int x, int y, float amount) {
         this.density.get(x).set(y, this.density.get(x).get(y) + amount);
     }
 
+    /**
+     * adds velocity to a certain point
+     * @param x the x loc
+     * @param y the y loc
+     * @param amount_x the amount added to the x axis
+     * @param amount_y the amount added to the y axis
+     */
     public void addVelocity(int x, int y, float amount_x, float amount_y) {
         this.vel_x.get(x).set(y, this.vel_x.get(x).get(y) + amount_x);
         this.vel_y.get(x).set(y, this.vel_y.get(x).get(y) + amount_y);
     }
 
+    /**
+     * advances the simulation by 1 step
+     */
     public void advance() {
         applySources();
 
-        diffuse(1, old_vel_x, vel_x, viscosity, time_change, 4);
-        diffuse(2, old_vel_y, vel_y, viscosity, time_change, 4);
+        diffuse(1, old_vel_x, vel_x, viscosity, time_change);
+        diffuse(2, old_vel_y, vel_y, viscosity, time_change);
 
-        project(old_vel_x, old_vel_y, vel_x, vel_y, 4);
+        project(old_vel_x, old_vel_y, vel_x, vel_y);
 
         advect(1, vel_x, old_vel_x, old_vel_x, old_vel_y, time_change);
         advect(2, vel_y, old_vel_y, old_vel_x, old_vel_y, time_change);
 
-        project(vel_x, vel_y, old_vel_x, old_vel_y, 4);
+        project(vel_x, vel_y, old_vel_x, old_vel_y);
 
-        diffuse(0, s, density, diffusion, time_change, 4);
+        diffuse(0, s, density, diffusion, time_change);
         advect(0, density, s, vel_x, vel_y, time_change);
     }
 
     /**
      * adds flow sources and paint sources to the simulation
-      */
-    public void applySources(){
-        for(Flow flow:flows){
-            vel_x.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),flow.getVelocity().getKey());
-            vel_y.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),flow.getVelocity().getValue());
+     */
+    public void applySources() {
+        for (Flow flow : flows) {
+            vel_x.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(), flow.getVelocity().getKey());
+            vel_y.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(), flow.getVelocity().getValue());
         }
 
-        for(Pair<Integer,Integer> source:paint_sources){
-            addDensity(source.getKey(),source.getValue(),1);
+        for (Pair<Integer, Integer> source : paint_sources) {
+            addDensity(source.getKey(), source.getValue(), 2);
         }
 
     }
 
+    /**
+     * sets the boundaries of an array
+     * @param b an extra int used to define how the array must be bounded
+     * @param array the array of which the boundaries will be set
+     */
     public void set_boundary(int b, List<List<Float>> array) {
         for (int i = 1; i < size - 1; i++) {
             array.get(i).set(0, b == 2 ? -array.get(i).get(1) : array.get(i).get(1));
             array.get(i).set(size - 1, b == 2 ? -array.get(i).get(size - 2) : array.get(i).get(size - 2));
         }
         for (int i = 1; i < size - 1; i++) {
-            array.get(0).set(i, b == 2 ? -array.get(1).get(i) : array.get(1).get(i));
-            array.get(size - 1).set(i, b == 2 ? -array.get(size - 2).get(i) : array.get(size - 2).get(i));
+            array.get(0).set(i, b == 1 ? -array.get(1).get(i) : array.get(1).get(i));
+            array.get(size - 1).set(i, b == 1 ? -array.get(size - 2).get(i) : array.get(size - 2).get(i));
         }
 
         array.get(0).set(0, 0.5f * (array.get(1).get(0) + array.get(0).get(1)));
@@ -138,7 +168,15 @@ public class Fluid {
         array.get(size - 1).set(size - 1, 0.5f * (array.get(size - 2).get(size - 1) + array.get(size - 1).get(size - 2)));
     }
 
-    public void lin_solve(int b, List<List<Float>> array, List<List<Float>> prev_array, float a, float c, int iter) {
+    /**
+     * solves the differential equation to advance the velocity vectors correctly
+     * @param b used to know how to set the boundaries correctly
+     * @param array the array on which the calculation is done
+     * @param prev_array a secondary array
+     * @param a a multiplier for the importance of the surrounding spots
+     * @param c an inverse multiplier for the entire operation
+     */
+    public void lin_solve(int b, List<List<Float>> array, List<List<Float>> prev_array, float a, float c) {
         float cRecip = 1.0f / c;
         for (int j = 1; j < size - 1; j++) {
             for (int i = 1; i < size - 1; i++) {
@@ -151,33 +189,57 @@ public class Fluid {
 
     }
 
-    public void diffuse(int b, List<List<Float>> array, List<List<Float>> prev_array, float diff, float dt, int iter) {
+    /**
+     * diffuses the fluid/density
+     * @param b an int used to knoww how to set the boundaries
+     * @param array the array that is diffused on
+     * @param prev_array the array used as base array in lin solve
+     * @param diff diffusion value
+     * @param dt time difference value
+     */
+    public void diffuse(int b, List<List<Float>> array, List<List<Float>> prev_array, float diff, float dt) {
         float a = dt * diff * (size - 2) * (size - 2);
-        this.lin_solve(b, array, prev_array, a, 1 + 6 * a, iter);
+        this.lin_solve(b, array, prev_array, a, 1 + 6 * a);
     }
 
-    public void project(List<List<Float>> velocity_x, List<List<Float>> velocity_y, List<List<Float>> p, List<List<Float>> div, int iter) {
+    /**
+     * projects the velocity for this step
+     * @param velocity_x x velocity vector
+     * @param velocity_y y velocity vector
+     * @param clear_vector vector that will be cleared and then used for lin calculations
+     * @param target_vector target vector used to stroe values of the first pass
+     */
+    public void project(List<List<Float>> velocity_x, List<List<Float>> velocity_y, List<List<Float>> clear_vector, List<List<Float>> target_vector) {
         for (int j = 1; j < size - 1; j++) {
             for (int i = 1; i < size - 1; i++) {
-                div.get(i).set(j, -0.5f * (velocity_x.get(i + 1).get(j) - velocity_x.get(i - 1).get(j) +
+                target_vector.get(i).set(j, -0.5f * (velocity_x.get(i + 1).get(j) - velocity_x.get(i - 1).get(j) +
                         velocity_y.get(i).get(j + 1) - velocity_y.get(i).get(j - 1)) / size);
-                p.get(i).set(j, 0f);
+                clear_vector.get(i).set(j, 0f);
             }
         }
-        this.set_boundary(0, div);
-        this.set_boundary(0, p);
-        lin_solve(0, p, div, 1, 6, iter);
+        this.set_boundary(0, target_vector);
+        this.set_boundary(0, clear_vector);
+        lin_solve(0, clear_vector, target_vector, 1, 6);
 
         for (int i = 1; i < size - 1; i++) {
             for (int j = 1; j < size - 1; j++) {
-                velocity_x.get(j).set(i, velocity_x.get(j).get(i) - 0.5f * (p.get(j + 1).get(i) - p.get(j - 1).get(i)) * size);
-                velocity_y.get(j).set(i, velocity_y.get(j).get(i) - 0.5f * (p.get(j).get(i + 1) - p.get(j).get(i - 1)) * size);
+                velocity_x.get(j).set(i, velocity_x.get(j).get(i) - 0.5f * (clear_vector.get(j + 1).get(i) - clear_vector.get(j - 1).get(i)) * size);
+                velocity_y.get(j).set(i, velocity_y.get(j).get(i) - 0.5f * (clear_vector.get(j).get(i + 1) - clear_vector.get(j).get(i - 1)) * size);
             }
         }
         this.set_boundary(1, velocity_x);
         this.set_boundary(2, velocity_y);
     }
 
+    /**
+     * advects the fluid (makes it move according to the velocities)
+     * @param b used as integer to know how to set the boundary
+     * @param d vector that will hold fluid values of this step
+     * @param prev_d previous x or uy vector
+     * @param velocity_x x velocity
+     * @param velocity_y y velocity
+     * @param dt time difference of this step
+     */
     public void advect(int b, List<List<Float>> d, List<List<Float>> prev_d, List<List<Float>> velocity_x, List<List<Float>> velocity_y, float dt) {
         float i0, i1, j0, j1;
 
@@ -229,21 +291,30 @@ public class Fluid {
         this.set_boundary(b, d);
     }
 
+    /**
+     * Does the action of a click on the simulation
+     * @param xpos the x position of the click
+     * @param ypos the y position of the click
+     */
     public void click(Integer xpos, Integer ypos) {
+        //prevent out of bound exceptions
+        if (xpos >= size || xpos <= 0 || ypos >= size || ypos <= 0) {
+            return;
+        }
         switch (this.click_mode) {
             case MAKE_PAINT_SOURCE:
                 Pair<Integer, Integer> source = new Pair<>(xpos, ypos);
                 this.paint_sources.add(source);
+                this.stored_click = null;
                 break;
             case MAKE_FLOW:
-                if(this.stored_click==null){
-                    this.stored_click= new Pair<>(xpos, ypos);
-                }else{
+                if (this.stored_click == null) {
+                    this.stored_click = new Pair<>(xpos, ypos);
+                } else {
                     //sometimes libgdx registers multiple clicks, this is caught here
-                    if(!xpos.equals(this.stored_click.getKey()) &&!ypos.equals(this.stored_click.getValue())) {
-                        float xvel = -(float)( this.stored_click.getKey() - xpos) / (size/10f);
-                        float yvel = -(float)(this.stored_click.getValue() - ypos) / (size/10f);
-                        System.out.println("making flow with yvel:" + yvel + " and xvel:" + xvel);
+                    if (!xpos.equals(this.stored_click.getKey()) && !ypos.equals(this.stored_click.getValue())) {
+                        float xvel = -(float) (this.stored_click.getKey() - xpos) / (size / 10f);
+                        float yvel = -(float) (this.stored_click.getValue() - ypos) / (size / 10f);
                         Pair<Float, Float> vel = new Pair<>(xvel, yvel);
                         Flow flow = new Flow(this.stored_click, vel);
                         this.flows.add(flow);
@@ -257,6 +328,22 @@ public class Fluid {
 
     public void setClickMode(ClickMode mode) {
         this.click_mode = mode;
-        this.stored_click=null;
+        this.stored_click = null;
+    }
+
+    public Pair<Integer, Integer> getStored_click() {
+        return stored_click;
+    }
+
+    public List<List<Float>> getDensity() {
+        return density;
+    }
+
+    public List<List<Float>> getVel_x() {
+        return vel_x;
+    }
+
+    public List<List<Float>> getVel_y() {
+        return vel_y;
     }
 }
