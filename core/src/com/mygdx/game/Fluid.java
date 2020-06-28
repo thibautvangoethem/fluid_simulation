@@ -72,12 +72,12 @@ public class Fluid {
         this.time_change = dt;
 
         for (int size_iterator = 0; size_iterator < size; size_iterator++) {
-            s.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
-            density.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
-            vel_x.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
-            vel_y.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
-            old_vel_x.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
-            old_vel_y.add(new ArrayList<Float>(Collections.nCopies(size, 0f)));
+            s.add(new ArrayList<>(Collections.nCopies(size, 0f)));
+            density.add(new ArrayList<>(Collections.nCopies(size, 0f)));
+            vel_x.add(new ArrayList<>(Collections.nCopies(size, 0f)));
+            vel_y.add(new ArrayList<>(Collections.nCopies(size, 0f)));
+            old_vel_x.add(new ArrayList<>(Collections.nCopies(size, 0f)));
+            old_vel_y.add(new ArrayList<>(Collections.nCopies(size, 0f)));
         }
     }
 
@@ -112,8 +112,8 @@ public class Fluid {
       */
     public void applySources(){
         for(Flow flow:flows){
-            vel_x.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),(float)flow.getVelocity().getKey());
-            vel_y.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),(float)flow.getVelocity().getValue());
+            vel_x.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),flow.getVelocity().getKey());
+            vel_y.get(flow.getLocation().getKey()).set(flow.getLocation().getValue(),flow.getVelocity().getValue());
         }
 
         for(Pair<Integer,Integer> source:paint_sources){
@@ -240,9 +240,9 @@ public class Fluid {
                     this.stored_click= new Pair<>(xpos, ypos);
                 }else{
                     //sometimes libgdx registers multiple clicks, this is caught here
-                    if(xpos!=this.stored_click.getKey() &&ypos!=this.stored_click.getValue()) {
-                        float xvel = -(float)( this.stored_click.getKey() - xpos) / (size/10);
-                        float yvel = -(float)(this.stored_click.getValue() - ypos) / (size/10);
+                    if(!xpos.equals(this.stored_click.getKey()) &&!ypos.equals(this.stored_click.getValue())) {
+                        float xvel = -(float)( this.stored_click.getKey() - xpos) / (size/10f);
+                        float yvel = -(float)(this.stored_click.getValue() - ypos) / (size/10f);
                         System.out.println("making flow with yvel:" + yvel + " and xvel:" + xvel);
                         Pair<Float, Float> vel = new Pair<>(xvel, yvel);
                         Flow flow = new Flow(this.stored_click, vel);

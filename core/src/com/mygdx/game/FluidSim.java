@@ -96,9 +96,9 @@ public class FluidSim extends ApplicationAdapter {
     public void drawUI(){
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect( simSize, simSize-simSize/2, totalWidth-simSize, simSize/2);
+        shapeRenderer.rect( simSize, simSize-simSize/2f, totalWidth-simSize, simSize/2f);
         shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect( simSize, 0, totalWidth-simSize, simSize/2);
+        shapeRenderer.rect( simSize, 0, totalWidth-simSize, simSize/2f);
         shapeRenderer.end();
     }
 
