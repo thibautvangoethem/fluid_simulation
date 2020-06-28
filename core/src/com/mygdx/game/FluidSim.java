@@ -31,7 +31,7 @@ public class FluidSim extends ApplicationAdapter {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        fluid=new Fluid(simSize,0.000005f,0,0.005f);
+        fluid=new Fluid(simSize,0.000005f,0,0.05f);
 
         // A Pixmap is basically a raw image in memory as repesented by pixels
         pixmap = new Pixmap(simSize, simSize, Pixmap.Format.RGB888);
@@ -62,10 +62,6 @@ public class FluidSim extends ApplicationAdapter {
         //basic anti aliasing look at  https://stackoverflow.com/questions/35969253/libgdx-antialiasing
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
 
-//        fluid.addDensity(10,10,1000);
-//        fluid.addVelocity(10,10,100f,100f);
-//        fluid.addVelocity(10,100,100f,-150f);
-//        fluid.addVelocity(50,10,0,100f);
         fluid.advance();
         fluidToSprite();
 

@@ -140,16 +140,14 @@ public class Fluid {
 
     public void lin_solve(int b, List<List<Float>> array, List<List<Float>> prev_array, float a, float c, int iter) {
         float cRecip = 1.0f / c;
-        for (int k = 0; k < iter; k++) {
-            for (int j = 1; j < size - 1; j++) {
-                for (int i = 1; i < size - 1; i++) {
-                    array.get(i).set(j, (prev_array.get(i).get(j) +
-                            a * (array.get(i + 1).get(j) + array.get(i - 1).get(j) +
-                                    array.get(i).get(j + 1) + array.get(i).get(j - 1))) * cRecip);
-                }
+        for (int j = 1; j < size - 1; j++) {
+            for (int i = 1; i < size - 1; i++) {
+                array.get(i).set(j, (prev_array.get(i).get(j) +
+                        a * (array.get(i + 1).get(j) + array.get(i - 1).get(j) +
+                                array.get(i).get(j + 1) + array.get(i).get(j - 1))) * cRecip);
             }
-            this.set_boundary(b, array);
         }
+        this.set_boundary(b, array);
 
     }
 
