@@ -78,6 +78,15 @@ public class FluidSim extends ApplicationAdapter {
         shapeRenderer.rect(simSize, simSize - simSize / 2f, totalWidth - simSize, simSize / 2f);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(simSize, 0, totalWidth - simSize, simSize / 2f);
+
+        shapeRenderer.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        if(fluid.getClick_mode().equals(ClickMode.MAKE_FLOW)){
+            shapeRenderer.rect(simSize, simSize - simSize / 2f, totalWidth - simSize, simSize / 2f);
+        }else if(fluid.getClick_mode().equals(ClickMode.MAKE_PAINT_SOURCE)){
+            shapeRenderer.rect(simSize, 0, totalWidth - simSize, simSize / 2f);
+        }
         shapeRenderer.end();
     }
 

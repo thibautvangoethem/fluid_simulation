@@ -346,4 +346,8 @@ public class Fluid {
     public List<List<Float>> getVel_y() {
         return vel_y;
     }
+
+    public ClickMode getClick_mode() {
+        return click_mode;
+    }
 }
