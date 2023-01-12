@@ -5,6 +5,7 @@ import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 //Enum used to represent the current click mode the simulation is in
 enum ClickMode {
@@ -48,23 +49,23 @@ public class Fluid {
     //used for storing a click which is needed when creating a flow
     private Pair<Integer, Integer> stored_click = null;
 
-    private List<Pair<Integer, Integer>> paint_sources = new ArrayList<>();
+    private final List<Pair<Integer, Integer>> paint_sources = new ArrayList<>();
 
-    private List<Flow> flows = new ArrayList<>();
+    private final List<Flow> flows = new ArrayList<>();
 
-    private int size;
-    private float time_change;
-    private float diffusion;
-    private float viscosity;
+    private final int size;
+    private final float time_change;
+    private final float diffusion;
+    private final float viscosity;
 
-    private List<List<Float>> s = new ArrayList<>();
-    private List<List<Float>> density = new ArrayList<>();
+    private final List<List<Float>> s = new ArrayList<>();
+    private final List<List<Float>> density = new ArrayList<>();
 
-    private List<List<Float>> vel_x = new ArrayList<>();
-    private List<List<Float>> vel_y = new ArrayList<>();
+    private final List<List<Float>> vel_x = new ArrayList<>();
+    private final List<List<Float>> vel_y = new ArrayList<>();
 
-    private List<List<Float>> old_vel_x = new ArrayList<>();
-    private List<List<Float>> old_vel_y = new ArrayList<>();
+    private final List<List<Float>> old_vel_x = new ArrayList<>();
+    private final List<List<Float>> old_vel_y = new ArrayList<>();
 
     /**
      * creation of the simulation and its arraylists
@@ -75,6 +76,7 @@ public class Fluid {
      * @param dt        the amount of time pased per step
      */
     public Fluid(int size, float diffusion, float viscosity, float dt) {
+
         this.size = size;
         this.diffusion = diffusion;
         this.viscosity = viscosity;
@@ -176,7 +178,7 @@ public class Fluid {
      * @param a a multiplier for the importance of the surrounding spots
      * @param c an inverse multiplier for the entire operation
      */
-    public void lin_solve(int b, List<List<Float>> array, List<List<Float>> prev_array, float a, float c) {
+    public void lin_solve(int b, List<List<Float>> array, List<List<Float>> prev_array, Float a, Float c) {
         float cRecip = 1.0f / c;
         for (int j = 1; j < size - 1; j++) {
             for (int i = 1; i < size - 1; i++) {
@@ -197,7 +199,7 @@ public class Fluid {
      * @param diff diffusion value
      * @param dt time difference value
      */
-    public void diffuse(int b, List<List<Float>> array, List<List<Float>> prev_array, float diff, float dt) {
+    public void diffuse(int b, List<List<Float>> array, List<List<Float>> prev_array, Float diff, Float dt) {
         float a = dt * diff * (size - 2) * (size - 2);
         this.lin_solve(b, array, prev_array, a, 1 + 6 * a);
     }
@@ -219,7 +221,7 @@ public class Fluid {
         }
         this.set_boundary(0, target_vector);
         this.set_boundary(0, clear_vector);
-        lin_solve(0, clear_vector, target_vector, 1, 6);
+        lin_solve(0, clear_vector, target_vector, 1f, 6f);
 
         for (int i = 1; i < size - 1; i++) {
             for (int j = 1; j < size - 1; j++) {
@@ -278,10 +280,6 @@ public class Fluid {
                 int i1i = Math.round(i1);
                 int j0i = Math.round(j0);
                 int j1i = Math.round(j1);
-                if (j1i == 513) {
-                    System.out.println("aaa");
-                }
-
 
                 d.get(i).set(j,
                         s0 * (t0 * prev_d.get(i0i).get(j0i) + t1 * prev_d.get(i0i).get(j1i)) +

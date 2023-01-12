@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import java.util.List;
 
 public class FluidSim extends ApplicationAdapter {
-    public int simSize = 200;
+    public int simSize = 1000;
     public int totalWidth = (int) Math.floor(simSize * 1.2);
     private SpriteBatch batch;
     private Pixmap pixmap;
@@ -32,6 +32,7 @@ public class FluidSim extends ApplicationAdapter {
 
     @Override
     public void render() {
+        long begin = System.currentTimeMillis();
         Gdx.gl.glClearColor(0, 0, 0, 1);
         //basic anti aliasing look at  https://stackoverflow.com/questions/35969253/libgdx-antialiasing
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling ? GL20.GL_COVERAGE_BUFFER_BIT_NV : 0));
@@ -46,6 +47,8 @@ public class FluidSim extends ApplicationAdapter {
         drawUI();
 
         handleInput();
+        long end = System.currentTimeMillis();
+        System.out.printf("render took %s ms%n", end-begin);
 
     }
 
